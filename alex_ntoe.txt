@@ -1,0 +1,5 @@
+steal ethans code from GOLD (which uses same format) he calculated %change columns, etc
+
+good starting point
+
+do n linear regressions where each one predicts subsequent rows: show changing certainty with time

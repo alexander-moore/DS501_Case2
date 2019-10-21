@@ -85,7 +85,7 @@ heat_map = sb.heatmap(chi_cov)
 #plt.show()
 
 heat_map = sb.heatmap(chi_cor, annot = True, xticklabels = 1, yticklabels = 1)
-#plt.show()
+plt.show()
 
 # which have lowest variance and highest mean?
 sd_row = list(np.apply_along_axis(statistics.stdev, axis = 0, arr = chi_df))
@@ -101,3 +101,9 @@ for i in range(0, chi_df.shape[1]):
     q_stat.append(num)
 
 print('highest q_stat: ', names_list[q_stat.index(max(q_stat))])
+
+plt.plot(mean_row, sd_row)
+
+plt.show()
+
+print('done??')
