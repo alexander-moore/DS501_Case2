@@ -46,7 +46,7 @@ for file in fileList:
         
         if (i == 0):
             prev_close = init_prev_close
-
+            # make % increase
             _1_chi = (close - init_prev_close) / init_prev_close
         else:
             prev_close = df.iloc[i-1, 4]
@@ -83,6 +83,9 @@ chi_cor.index = names_list
 
 heat_map = sb.heatmap(chi_cov)
 #plt.show()
+
+
+# HERE IS THE CORRELATION MATRICES
 
 heat_map = sb.heatmap(chi_cor, annot = True, xticklabels = 1, yticklabels = 1)
 plt.show()
