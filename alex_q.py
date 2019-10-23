@@ -46,4 +46,99 @@ log_monthly = log_monthly.iloc[1:]
 
  
 print(log_monthly)
- 
+
+
+################ Cor Mat and Moving Window code:
+
+data = data_weekly
+
+del data 'Date'
+
+names_list = data.columns.values
+chi_col_list = []
+
+for col in data:
+    # chi_col will hold our % changes
+    chi_col = []
+
+	# use this if the columns are different lengths and you only want the most recent 10 years:
+    #point = stock_df.shape[0]-520
+
+    # % increease = close - prev_close / prev_close
+    # we want stocks with low VAR of this, high SUM of this
+
+    init_prev_close = data[col[0]] #just get the first one
+
+    for i in range(0,data.shape[0]):
+        close = data[col[0]]
+        
+        if (i == 0):
+            prev_close = init_prev_close
+            # make % increase
+            _1_chi = (close - init_prev_close) / init_prev_close
+        else:
+            prev_close = df.iloc[i-1, 4]
+
+            _1_chi = (close - prev_close) / prev_close
+
+        chi_col.append(_1_chi)
+
+    chi_col_list.append(chi_col)
+
+# now we have a name list and a chi_col_list, could make a cov matrix with this
+#print(names_list)
+#print(chi_col_list)
+#print(len(chi_col_list))
+#print(len(chi_col_list[0]))
+#for i in range(0, len(chi_col_list)):
+#    print(len(chi_col_list[i]))
+#    print(names_list[i])
+
+
+chi_df = np.array(chi_col_list).T
+print(chi_df.shape)
+
+chi_df = pd.DataFrame(chi_df, columns = names_list)
+print(chi_df)
+
+chi_cov = np.cov(chi_df.T)
+print(chi_cov.shape)
+
+chi_cor = np.corrcoef(chi_df.T)
+chi_cor = pd.DataFrame(chi_cor, columns = names_list)
+chi_cor.index = names_list
+
+heat_map = sb.heatmap(chi_cov)
+#plt.show()
+
+
+# HERE IS THE CORRELATION MATRICES
+
+heat_map = sb.heatmap(chi_cor, annot = True, xticklabels = 1, yticklabels = 1)
+plt.show()
+
+
+
+
+
+### THIS CODE IS JUST TO CALCULATE THE MEAN AND VARIANCE OF THE CHI COLS, CAN IGNORE:::
+# which have lowest variance and highest mean?
+sd_row = list(np.apply_along_axis(statistics.stdev, axis = 0, arr = chi_df))
+print('lowest sd: ', names_list[sd_row.index(min(sd_row))])
+
+mean_row = list(np.apply_along_axis(statistics.mean, axis = 0, arr = chi_df))
+print('highest mean: ', names_list[mean_row.index(max(mean_row))])
+
+q_stat = []
+
+for i in range(0, chi_df.shape[1]):
+    num = mean_row[i] / sd_row[i]
+    q_stat.append(num)
+
+print('highest q_stat: ', names_list[q_stat.index(max(q_stat))])
+
+plt.plot(mean_row, sd_row)
+
+plt.show()
+
+print('done??')
