@@ -1,13 +1,9 @@
 import numpy as np
-
 import pandas as pd
-
 import datetime as dt
-
 import matplotlib.pyplot as plt
-
 from scipy.optimize import minimize #, rosen, rosen_der
-
+import seaborn as sb
  
 
 #Pulls in monthly and weekly DOW30 stock prices back to 2000 from CSV files, drops columns with incomplete price history
@@ -52,7 +48,7 @@ print(log_monthly)
 
 data = data_weekly
 
-del data 'Date'
+print(data.columns.values)
 
 names_list = data.columns.values
 chi_col_list = []
@@ -61,23 +57,25 @@ for col in data:
     # chi_col will hold our % changes
     chi_col = []
 
+    c_col = list(data[col])
+
 	# use this if the columns are different lengths and you only want the most recent 10 years:
     #point = stock_df.shape[0]-520
 
     # % increease = close - prev_close / prev_close
     # we want stocks with low VAR of this, high SUM of this
 
-    init_prev_close = data[col[0]] #just get the first one
+    init_prev_close = c_col[0] #just get the first one
 
     for i in range(0,data.shape[0]):
-        close = data[col[0]]
+        close = c_col[0]
         
         if (i == 0):
             prev_close = init_prev_close
             # make % increase
             _1_chi = (close - init_prev_close) / init_prev_close
         else:
-            prev_close = df.iloc[i-1, 4]
+            prev_close = c_col[i-1]
 
             _1_chi = (close - prev_close) / prev_close
 
@@ -96,19 +94,19 @@ for col in data:
 
 
 chi_df = np.array(chi_col_list).T
-print(chi_df.shape)
+#print(chi_df.shape)
 
 chi_df = pd.DataFrame(chi_df, columns = names_list)
-print(chi_df)
+#print(chi_df)
 
 chi_cov = np.cov(chi_df.T)
-print(chi_cov.shape)
+#print(chi_cov.shape)
 
 chi_cor = np.corrcoef(chi_df.T)
 chi_cor = pd.DataFrame(chi_cor, columns = names_list)
 chi_cor.index = names_list
 
-heat_map = sb.heatmap(chi_cov)
+#heat_map = sb.heatmap(chi_cov)
 #plt.show()
 
 
@@ -119,26 +117,47 @@ plt.show()
 
 
 
+# MAKE A MOVING WINDOW THAT CONSIDERS A 6-MOTH STOCK SUBSET, CAPTURE ITS MEAN CORR:
+
+print(data.shape)
+iterations = data.shape[0]
+
+moving_window_size = 10 # size in months of moving window
+
+moving_cor_list = []
+
+for i in range(0, iterations - moving_window_size):
+
+	data_subset = data[i:moving_window_size]
+
+	subset_cor = np.corrcoef(data_subset)
+	print(subset_cor.shape)
+
+	subset_cor_mean = subset_cor.mean(axis = 1).mean(axis = 0)
+
+	moving_cor_list.append(subset_cor_mean)
+
 
 
 ### THIS CODE IS JUST TO CALCULATE THE MEAN AND VARIANCE OF THE CHI COLS, CAN IGNORE:::
 # which have lowest variance and highest mean?
-sd_row = list(np.apply_along_axis(statistics.stdev, axis = 0, arr = chi_df))
-print('lowest sd: ', names_list[sd_row.index(min(sd_row))])
 
-mean_row = list(np.apply_along_axis(statistics.mean, axis = 0, arr = chi_df))
-print('highest mean: ', names_list[mean_row.index(max(mean_row))])
+#sd_row = list(np.apply_along_axis(statistics.stdev, axis = 0, arr = chi_df))
+#print('lowest sd: ', names_list[sd_row.index(min(sd_row))])
 
-q_stat = []
+#mean_row = list(np.apply_along_axis(statistics.mean, axis = 0, arr = chi_df))
+#print('highest mean: ', names_list[mean_row.index(max(mean_row))])
 
-for i in range(0, chi_df.shape[1]):
-    num = mean_row[i] / sd_row[i]
-    q_stat.append(num)
+#q_stat = []
 
-print('highest q_stat: ', names_list[q_stat.index(max(q_stat))])
+#for i in range(0, chi_df.shape[1]):
+#    num = mean_row[i] / sd_row[i]
+#    q_stat.append(num)
 
-plt.plot(mean_row, sd_row)
+#print('highest q_stat: ', names_list[q_stat.index(max(q_stat))])
 
-plt.show()
+#plt.plot(mean_row, sd_row)
 
-print('done??')
+#plt.show()
+
+#print('done??')
